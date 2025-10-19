@@ -148,4 +148,12 @@ authRouter.delete("/deleteProfile/:id", userAuth, async (req, res) => {
     res.status(500).json({  message: "Deletion failed", error });
   }
 });
+authRouter.get("/me", userAuth, async (req, res) => {
+  try {
+    res.json(req.user); 
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = authRouter;
