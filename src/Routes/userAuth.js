@@ -148,12 +148,21 @@ authRouter.delete("/deleteProfile/:id", userAuth, async (req, res) => {
     res.status(500).json({  message: "Deletion failed", error });
   }
 });
-authRouter.get("/me", userAuth, async (req, res) => {
+
+authRouter.get("/me", async (req, res) => {
   try {
-    res.json(req.user); 
+    const token = req.cookies.token;
+    if (!token) return res.status(401).send("Login required");
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded._id);
+    if (!user) return res.status(401).send("User not found");
+
+    res.send(user);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(401).send("Invalid token");
   }
 });
+
 
 module.exports = authRouter;
