@@ -2,10 +2,14 @@ const express = require("express");
 const authRouter = express.Router();
 const bcrypt = require("bcrypt");
 
-const { validateSignupData, validatePasswordOnly } = require("../utils/Validation");
+const {
+  validateSignupData,
+  validatePasswordOnly,
+} = require("../utils/Validation");
 const User = require("../Model/user");
 const bcrpt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const { userAuth } = require("../Middleware/auth");
 
 // Signup API
 authRouter.post("/signUp", async (req, res) => {
@@ -80,7 +84,6 @@ authRouter.post("/logout", async (req, res) => {
   }
 });
 
-
 // Forgot password API
 authRouter.post("/forgotPassword", async (req, res) => {
   try {
@@ -108,5 +111,38 @@ authRouter.post("/forgotPassword", async (req, res) => {
     res.status(400).send("ERROR in forgot password: " + error.message);
   }
 });
+                                                                            // update my profile 
 
+
+authRouter.patch("/updateProfile/:id", userAuth, async (req, res) => {
+  try {
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json(updatedUser); 
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+
+                                                                                    // DELETE
+authRouter.delete("/deleteProfile/:id", userAuth, async (req, res) => {
+  try {
+    await User.findByIdAndDelete(req.params.id);
+    res
+      .status(200)
+      .json({message: "User deleted successfully" });
+  } catch (error) {
+    res.status(500).json({  message: "Deletion failed", error });
+  }
+});
 module.exports = authRouter;
